@@ -1,0 +1,17 @@
+INSERT INTO students (student_code,first_name,last_name,email,phone,date_of_birth,gender,address,major,enrollment_year,gpa,status,photo_url,created_at,updated_at) VALUES
+('STU-2024-0001','Amira','Ben Ali','amira.benali@example.edu','+216 20 100 001','2004-03-14','FEMALE','Tunis, Tunisia','Computer Science',2024,3.82,'ACTIVE',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2023-0002','Youssef','Mansour','youssef.mansour@example.edu','+216 20 100 002','2003-07-02','MALE','Sfax, Tunisia','Business Administration',2023,3.45,'ACTIVE',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2022-0003','Lina','Trabelsi','lina.trabelsi@example.edu','+216 20 100 003','2002-11-21','FEMALE','Sousse, Tunisia','Mathematics',2022,3.91,'GRADUATED',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2025-0004','Omar','Gharbi','omar.gharbi@example.edu','+216 20 100 004','2005-01-09','MALE','Monastir, Tunisia','Engineering',2025,3.28,'ACTIVE',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2024-0005','Sara','Khalfallah','sara.khalfallah@example.edu','+216 20 100 005','2004-06-30','FEMALE','Tunis, Tunisia','Psychology',2024,3.76,'ACTIVE',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2021-0006','Adam','Jaziri','adam.jaziri@example.edu','+216 20 100 006','2001-09-18','MALE','Nabeul, Tunisia','Computer Science',2021,3.60,'GRADUATED',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2025-0007','Mariam','Sassi','mariam.sassi@example.edu','+216 20 100 007','2005-12-04','FEMALE','Bizerte, Tunisia','Biology',2025,3.18,'ACTIVE',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2023-0008','Karim','Ben Youssef','karim.benyoussef@example.edu','+216 20 100 008','2003-05-26','MALE','Tunis, Tunisia','Physics',2023,2.94,'SUSPENDED',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2024-0009','Nour','Haddad','nour.haddad@example.edu','+216 20 100 009','2004-08-12','OTHER','Ariana, Tunisia','Computer Science',2024,3.55,'ACTIVE',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2022-0010','Rania','Mejri','rania.mejri@example.edu','+216 20 100 010','2002-02-15','FEMALE','Sfax, Tunisia','Economics',2022,3.40,'GRADUATED',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2025-0011','Mehdi','Ayari','mehdi.ayari@example.edu','+216 20 100 011','2005-04-23','MALE','Kairouan, Tunisia','Engineering',2025,3.02,'ACTIVE',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2023-0012','Ines','Chaabane','ines.chaabane@example.edu','+216 20 100 012','2003-10-07','FEMALE','Tunis, Tunisia','Design',2023,3.87,'ACTIVE',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2021-0013','Fares','Khemiri','fares.khemiri@example.edu','+216 20 100 013','2001-12-19','MALE','Gabes, Tunisia','Business Administration',2021,3.24,'GRADUATED',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2024-0014','Dorra','Bouzid','dorra.bouzid@example.edu','+216 20 100 014','2004-04-01','FEMALE','Sousse, Tunisia','Biology',2024,3.69,'ACTIVE',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2025-0015','Walid','Saidi','walid.saidi@example.edu','+216 20 100 015','2005-07-17','MALE','Tunis, Tunisia','Mathematics',2025,2.81,'ACTIVE',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),
+('STU-2022-0016','Yasmine','Kallel','yasmine.kallel@example.edu','+216 20 100 016','2002-06-08','FEMALE','Mahdia, Tunisia','Psychology',2022,3.93,'GRADUATED',NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP);
