@@ -14,7 +14,6 @@ import java.time.Instant;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,19 +56,16 @@ class AppUserServiceTest {
     @Test void studentAccountRequiresAnExistingRecordAndGetsOnlyTheStudentRole() {
         Student student = mock(Student.class);
         when(student.getFirstName()).thenReturn("Amira"); when(student.getLastName()).thenReturn("Ben Ali");
-        when(student.getId()).thenReturn(1L);
         when(students.findByEmailIgnoreCase("amira@example.edu")).thenReturn(Optional.of(student));
-        when(students.findById(1L)).thenReturn(Optional.of(student));
         when(users.findByEmailIgnoreCase("amira@example.edu")).thenReturn(Optional.empty());
-        when(passwords.encode(anyString())).thenReturn("bcrypt-hash");
+        when(passwords.encode("a-strong-password")).thenReturn("bcrypt-hash");
         when(users.save(any())).thenAnswer(call -> call.getArgument(0));
 
-        StudentCredentials credentials = service("", "").createStudentAccount(
-                new StudentAccountRequest("amira@example.edu"));
-        assertEquals("amira@example.edu", credentials.user().email());
-        assertEquals(java.util.Set.of(AppRole.STUDENT), credentials.user().roles());
-        assertEquals(20, credentials.temporaryPassword().length());
-        verify(passwords).encode(credentials.temporaryPassword());
+        AppUserView account = service("", "").createStudentAccount(
+                new StudentAccountRequest("amira@example.edu", "a-strong-password"));
+        assertEquals("amira@example.edu", account.email());
+        assertEquals(java.util.Set.of(AppRole.STUDENT), account.roles());
+        verify(passwords).encode("a-strong-password");
     }
 
     @Test void incorrectPasswordUsesTheSameGenericCredentialError() {

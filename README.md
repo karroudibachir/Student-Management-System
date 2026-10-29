@@ -79,7 +79,7 @@ Open [http://localhost:8080](http://localhost:8080). The frontend container serv
 
 At startup, the API creates the first admin account from `SMS_BOOTSTRAP_ADMIN_EMAIL` and `SMS_BOOTSTRAP_ADMIN_PASSWORD`. Sign in at [http://localhost:8080/login](http://localhost:8080/login). Keep those bootstrap values in `.env`; if the email already has an account, startup does not replace its password.
 
-When an admin adds a student, the API creates the linked student login, generates a random temporary password, and emails the login details to the student's email address. Student accounts can also be provisioned from **Accounts** for existing records without a login. Configure SMTP in `.env` (`SMS_MAIL_HOST`, `SMS_MAIL_PORT`, `SMS_MAIL_USERNAME`, `SMS_MAIL_PASSWORD`, and `SMS_MAIL_FROM`) and set `SMS_PUBLIC_APP_URL` to the app's sign-in URL. If SMTP is missing or delivery fails, student creation is rejected and its database changes are rolled back. Students sign in and use **My profile** to change their name, phone, date of birth, gender, address, and photo URL. Their email and academic data remain admin-managed. Student accounts cannot browse other student records or use the admin dashboard. Passwords are stored as BCrypt hashes; JWTs expire after eight hours.
+Admins create student records first, then open **Accounts** and create a student login using the same email. The admin chooses an initial password and shares it directly with the student; the app does not send email. Students sign in and use **My profile** to change their name, phone, date of birth, gender, address, and photo URL. Their email and academic data remain admin-managed. Student accounts cannot browse other student records or use the admin dashboard. Passwords are stored as BCrypt hashes; JWTs expire after eight hours.
 
 ### Local development
 
@@ -116,14 +116,6 @@ The Angular dev server is at [http://localhost:4200](http://localhost:4200); its
 | `JWT_SECRET` | local-only development value | HMAC JWT signing secret; use at least 32 random bytes in deployment |
 | `SMS_BOOTSTRAP_ADMIN_EMAIL` | empty outside Compose | Initial admin account email |
 | `SMS_BOOTSTRAP_ADMIN_PASSWORD` | empty outside Compose | Initial admin password, 12–72 characters |
-| `SMS_MAIL_HOST` | empty | SMTP hostname; required to deliver student credentials |
-| `SMS_MAIL_PORT` | `587` | SMTP port |
-| `SMS_MAIL_USERNAME` | empty | SMTP username |
-| `SMS_MAIL_PASSWORD` | empty | SMTP password |
-| `SMS_MAIL_FROM` | empty | Sender address, for example `no-reply@example.com` |
-| `SMS_MAIL_AUTH` | `true` | Enable SMTP authentication |
-| `SMS_MAIL_STARTTLS` | `true` | Enable STARTTLS |
-| `SMS_PUBLIC_APP_URL` | `http://localhost:8080/login` | Sign-in link included in student emails |
 | `BACKEND_ORIGIN` | `http://backend:8081` | API origin proxied by Nginx |
 
 The `.env.example` values are for local development only. Configure production secrets in the hosting provider's secret manager.
