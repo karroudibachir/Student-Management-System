@@ -18,6 +18,10 @@ spring:
       hibernate.jdbc.time_zone: UTC
   flyway:
     enabled: true
+  security:
+    oauth2.resourceserver.jwt:
+      issuer-uri: ${OIDC_ISSUER:http://localhost:8180/realms/student-management}
+      jwk-set-uri: ${OIDC_JWKS_URI:http://localhost:8180/realms/student-management/protocol/openid-connect/certs}
 management:
   endpoints.web.exposure.include: health,info
   endpoint.health.show-details: never
@@ -33,6 +37,8 @@ spring:
     driver-class-name: org.h2.Driver
   flyway.enabled: false
   jpa.hibernate.ddl-auto: create-drop
+  security.oauth2.resourceserver.jwt.issuer-uri: http://localhost:8180/realms/student-management
+  security.oauth2.resourceserver.jwt.jwk-set-uri: http://localhost:8180/realms/student-management/protocol/openid-connect/certs
 ---
 spring:
   config.activate.on-profile: prod
@@ -40,3 +46,5 @@ spring:
   datasource.username: ${DB_USER}
   datasource.password: ${DB_PASSWORD}
   jpa.hibernate.ddl-auto: validate
+  security.oauth2.resourceserver.jwt.issuer-uri: ${OIDC_ISSUER}
+  security.oauth2.resourceserver.jwt.jwk-set-uri: ${OIDC_JWKS_URI}

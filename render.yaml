@@ -15,6 +15,12 @@ services:
         sync: false
       - key: DB_PASSWORD
         sync: false
+      - key: OIDC_ISSUER
+        sync: false
+      - key: OIDC_JWKS_URI
+        sync: false
+      - key: SMS_BOOTSTRAP_ADMIN_EMAIL
+        sync: false
   - type: web
     name: student-management-frontend
     runtime: docker
@@ -25,3 +31,11 @@ services:
     envVars:
       - key: CORS_ORIGIN
         sync: false
+      - key: BACKEND_ORIGIN
+        sync: false
+      - key: OIDC_AUTH_URL
+        sync: false
+      - key: OIDC_REALM
+        value: student-management
+      - key: OIDC_CLIENT_ID
+        value: sms-frontend

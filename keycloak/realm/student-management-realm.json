@@ -1,0 +1,24 @@
+{
+  "realm": "student-management",
+  "enabled": true,
+  "displayName": "StudentSpace",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "clients": [
+    {
+      "clientId": "sms-frontend",
+      "name": "StudentSpace web application",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:8080/*", "http://localhost:4200/*"],
+      "webOrigins": ["http://localhost:8080", "http://localhost:4200"],
+      "attributes": {"pkce.code.challenge.method": "S256"},
+      "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "basic", "email"]
+    }
+  ]
+}

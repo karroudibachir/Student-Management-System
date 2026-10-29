@@ -1,0 +1,5 @@
+window.smsRuntimeConfig = {
+  authUrl: "${OIDC_AUTH_URL}",
+  realm: "${OIDC_REALM}",
+  clientId: "${OIDC_CLIENT_ID}"
+};

@@ -22,6 +22,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
       DDL_AUTO: validate
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:8180/realms/student-management}
+      OIDC_JWKS_URI: http://keycloak:8080/realms/student-management/protocol/openid-connect/certs
+      SMS_BOOTSTRAP_ADMIN_EMAIL: ${SMS_BOOTSTRAP_ADMIN_EMAIL:-}
     depends_on:
       mysql: {condition: service_healthy}
     healthcheck:
@@ -33,9 +36,25 @@ services:
     restart: unless-stopped
   frontend:
     build: ./frontend
+    environment:
+      BACKEND_ORIGIN: ${BACKEND_ORIGIN:-http://backend:8081}
+      OIDC_AUTH_URL: ${OIDC_AUTH_URL:-http://localhost:8180}
+      OIDC_REALM: ${OIDC_REALM:-student-management}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-sms-frontend}
     ports: ["${APP_PORT:-8080}:80"]
     depends_on:
       backend: {condition: service_healthy}
+    restart: unless-stopped
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:?Set KEYCLOAK_ADMIN_USER in .env}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD in .env}
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./keycloak/realm:/opt/keycloak/data/import:ro
+    ports: ["${KEYCLOAK_PORT:-8180}:8080"]
     restart: unless-stopped
 volumes:
   mysql_data:

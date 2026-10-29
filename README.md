@@ -10,13 +10,16 @@ A responsive student directory and dashboard built with Angular 20, Spring Boot 
 - Search, major/status/year filters, sortable pagination, and responsive student directory.
 - Add, view, edit, and delete student records with client and server validation.
 - Dark and light themes, saved in local storage and initialized from the OS preference.
+- OAuth 2.0 / OpenID Connect sign-in with Keycloak, Authorization Code + PKCE, and short-lived bearer JWTs.
+- Database-managed workspace roles (`ADMIN`, `STAFF`, `VIEWER`) with API-enforced permissions and an administrator role-management page.
 - Spring Data pagination and filtering, OpenAPI docs, health checks, and consistent API errors.
 
 ## Architecture
 
 ```text
 Browser ── Angular standalone SPA ── /api/v1 ── Spring MVC controller
-  │              │                                  │
+  │       │      │                                  │
+  │       └──── Keycloak (OIDC / PKCE)               │
   └── Nginx      └── StudentService                 ▼
        │                                      Student service
        └──────────────── reverse proxy ──────────────┤
@@ -25,12 +28,14 @@ Browser ── Angular standalone SPA ── /api/v1 ── Spring MVC controlle
                                                      │
                                                  MySQL 8
                                            Flyway schema + seeds
+  API ── validates JWT signature, issuer, and expiry against Keycloak JWKS
 ```
 
 ## Technology
 
 - Frontend: Angular 20, standalone components, signals, strict TypeScript, SCSS, Reactive Forms, Router.
 - Backend: Java 17, Spring Boot 3.3, Spring Web, Spring Data JPA, Bean Validation, Actuator, springdoc-openapi.
+- Authentication: Keycloak OIDC for user sign-in; Spring Security validates JWTs. StudentSpace roles are stored in MySQL and are independent of identity-provider roles.
 - Database: MySQL 8 in deployment, H2 for automated tests, Flyway migrations.
 - Runtime: Docker Compose, Nginx, GitHub Actions, Render blueprint.
 
@@ -47,6 +52,9 @@ Base URL: `/api/v1`. List results use Spring's `Page` JSON shape; `page` is zero
 | DELETE | `/students/{id}` | Delete student; returns 204 |
 | GET | `/students/stats` | Dashboard counts and average GPA |
 | GET | `/students/majors` | Distinct study areas |
+| GET | `/auth/me` | Get or provision the signed-in workspace user and roles |
+| GET | `/admin/users` | List signed-in workspace members (ADMIN) |
+| PUT | `/admin/users/{subject}/roles` | Set workspace roles (ADMIN) |
 | GET | `/actuator/health` | Service health |
 | GET | `/swagger-ui.html` | Interactive OpenAPI documentation |
 
@@ -56,13 +64,17 @@ Base URL: `/api/v1`. List results use Spring's `Page` JSON shape; `page` is zero
 
 ### Full stack with Docker
 
-Copy `.env.example` to `.env`, change the example passwords, then run:
+Copy `.env.example` to `.env`, replace every example password, set `SMS_BOOTSTRAP_ADMIN_EMAIL` to the email of the first administrator, then run:
 
 ```sh
 docker compose up -d --build
 ```
 
 Open [http://localhost:8080](http://localhost:8080). The frontend container serves the SPA and proxies `/api` to the backend. MySQL's named volume persists data. The first startup may take a few minutes while images build and migrations run.
+
+The compose stack starts a local Keycloak development server at [http://localhost:8180](http://localhost:8180) and imports the `student-management` realm. Sign in through StudentSpace using an account created in the Keycloak Admin Console; its local admin console credentials are the `KEYCLOAK_ADMIN_USER` and `KEYCLOAK_ADMIN_PASSWORD` values in `.env`. The first matching sign-in email is provisioned with `ADMIN`; all other first-time users start as `VIEWER`. Set `SMS_BOOTSTRAP_ADMIN_EMAIL` only for initial bootstrap, then clear it and restart the API after the admin has signed in. An administrator can promote members at **People & permissions**. Users appear in that list after their first successful sign-in.
+
+Local Keycloak uses `start-dev` and is intended for development. For a deployed environment, use a separately managed HTTPS Keycloak/OIDC realm. Configure the public SPA client `sms-frontend` with Standard Flow enabled, PKCE method `S256`, and the exact frontend callback URI (`https://<frontend-host>/login`) and web origin (`https://<frontend-host>`). Set the issuer URL and JWKS URL to that realm's endpoints. The issuer must match the `iss` claim in access tokens. The browser's OIDC URL must be reachable by end users; the API's JWKS URL must be reachable by the backend.
 
 ### Local development
 
@@ -96,6 +108,14 @@ The Angular dev server is at [http://localhost:4200](http://localhost:4200); its
 | `SERVER_PORT` | `8081` | Backend port |
 | `APP_PORT` | `8080` | Host port for frontend |
 | `DB_POOL_SIZE` | `10` | Hikari maximum pool size |
+| `OIDC_AUTH_URL` | `http://localhost:8180` | Identity provider base URL used by the browser adapter |
+| `OIDC_REALM` | `student-management` | Keycloak realm name |
+| `OIDC_CLIENT_ID` | `sms-frontend` | Public OIDC client id |
+| `OIDC_ISSUER` | `http://localhost:8180/realms/student-management` | Expected JWT issuer (must equal token `iss`) |
+| `OIDC_JWKS_URI` | local realm cert endpoint | Backend JWT signing-key endpoint |
+| `SMS_BOOTSTRAP_ADMIN_EMAIL` | empty | One-time email to provision as first workspace ADMIN |
+| `KEYCLOAK_ADMIN_USER` / `KEYCLOAK_ADMIN_PASSWORD` | required in Compose | Local Keycloak console bootstrap credentials |
+| `BACKEND_ORIGIN` | `http://backend:8081` | API origin proxied by Nginx; set to the deployed API URL on Render |
 
 The `.env.example` values are for local development only. Configure production secrets in the hosting provider's secret manager.
 
@@ -107,11 +127,11 @@ cd frontend && npm test -- --watch=false --browsers=ChromeHeadless
 npm run build
 ```
 
-Backend tests cover service rules with Mockito, REST status and validation responses with MockMvc, and repository search on H2. `mvn verify` enforces at least 80% line coverage for `StudentServiceImpl`. Frontend HTTP service, theme persistence, and form validation tests run with Karma and ChromeHeadless.
+Backend tests cover service rules with Mockito, JWT-to-role authority mapping, REST status and validation responses with MockMvc, and student/workspace-role persistence on H2. `mvn verify` enforces at least 80% line coverage for `StudentServiceImpl`. Frontend HTTP service, theme persistence, and form validation tests run with Karma and ChromeHeadless.
 
 ## Deploy to Render
 
-The included `render.yaml` describes separate Docker web services for the API and frontend. Provision a managed MySQL database, configure the API's `DB_URL`, `DB_USER`, and `DB_PASSWORD`, then set `CORS_ORIGIN` to the deployed frontend URL. The free instance tier may sleep while idle; provision persistent managed SQL separately since an app service's filesystem is ephemeral. Add `RENDER_DEPLOY_HOOK_URL` to GitHub repository secrets if CI should trigger deployment.
+The included `render.yaml` describes separate Docker web services for the API and frontend. Provision a managed MySQL database and a public HTTPS OIDC/Keycloak realm, then set API `DB_URL`, `DB_USER`, `DB_PASSWORD`, `OIDC_ISSUER`, `OIDC_JWKS_URI`, and `SMS_BOOTSTRAP_ADMIN_EMAIL`. Set frontend `OIDC_AUTH_URL`, `BACKEND_ORIGIN` (the API's public URL), and `CORS_ORIGIN`. Configure the OIDC client's callback URI and web origin for the deployed frontend URL. The free instance tier may sleep while idle; provision persistent managed SQL separately since an app service's filesystem is ephemeral. Add `RENDER_DEPLOY_HOOK_URL` to GitHub repository secrets if CI should trigger deployment.
 
 ## Manual acceptance checklist
 
