@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+target/
+.angular/
+.env
+*.log
+.idea/
+.vscode/
+Thumbs.db
