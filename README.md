@@ -37,7 +37,7 @@ Browser ── Angular standalone SPA ── /api/v1 ── Spring MVC controlle
 - Backend: Java 17, Spring Boot 3.3, Spring Web, Spring Data JPA, Bean Validation, Actuator, springdoc-openapi.
 - Authentication: Keycloak OIDC for user sign-in; Spring Security validates JWTs. StudentSpace roles are stored in MySQL and are independent of identity-provider roles.
 - Database: MySQL 8 in deployment, H2 for automated tests, Flyway migrations.
-- Runtime: Docker Compose, Nginx, GitHub Actions, Render blueprint.
+- Runtime: Docker Compose, Nginx, GitHub Actions.
 
 ## API
 
@@ -115,7 +115,7 @@ The Angular dev server is at [http://localhost:4200](http://localhost:4200); its
 | `OIDC_JWKS_URI` | local realm cert endpoint | Backend JWT signing-key endpoint |
 | `SMS_BOOTSTRAP_ADMIN_EMAIL` | empty | One-time email to provision as first workspace ADMIN |
 | `KEYCLOAK_ADMIN_USER` / `KEYCLOAK_ADMIN_PASSWORD` | required in Compose | Local Keycloak console bootstrap credentials |
-| `BACKEND_ORIGIN` | `http://backend:8081` | API origin proxied by Nginx; set to the deployed API URL on Render |
+| `BACKEND_ORIGIN` | `http://backend:8081` | API origin proxied by Nginx |
 
 The `.env.example` values are for local development only. Configure production secrets in the hosting provider's secret manager.
 
@@ -128,10 +128,6 @@ npm run build
 ```
 
 Backend tests cover service rules with Mockito, JWT-to-role authority mapping, REST status and validation responses with MockMvc, and student/workspace-role persistence on H2. `mvn verify` enforces at least 80% line coverage for `StudentServiceImpl`. Frontend HTTP service, theme persistence, and form validation tests run with Karma and ChromeHeadless.
-
-## Deploy to Render
-
-The included `render.yaml` describes separate Docker web services for the API and frontend. Provision a managed MySQL database and a public HTTPS OIDC/Keycloak realm, then set API `DB_URL`, `DB_USER`, `DB_PASSWORD`, `OIDC_ISSUER`, `OIDC_JWKS_URI`, and `SMS_BOOTSTRAP_ADMIN_EMAIL`. Set frontend `OIDC_AUTH_URL`, `BACKEND_ORIGIN` (the API's public URL), and `CORS_ORIGIN`. Configure the OIDC client's callback URI and web origin for the deployed frontend URL. The free instance tier may sleep while idle; provision persistent managed SQL separately since an app service's filesystem is ephemeral. Add `RENDER_DEPLOY_HOOK_URL` to GitHub repository secrets if CI should trigger deployment.
 
 ## Manual acceptance checklist
 
@@ -150,6 +146,5 @@ backend/                    Spring Boot REST API, migrations, and tests
 frontend/                   Angular SPA, Nginx config, and container build
 .github/workflows/ci.yml     CI build and test jobs
 docker-compose.yml           Local multi-service stack
-render.yaml                 Render Blueprint
 .env.example                Local configuration template
 ```
