@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import java.security.SecureRandom;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -22,6 +23,8 @@ import java.time.temporal.ChronoUnit;
 @Service
 @Transactional
 public class AppUserService {
+    private static final SecureRandom PASSWORD_RANDOM = new SecureRandom();
+    private static final char[] PASSWORD_CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%_-".toCharArray();
     private final AppUserRepository users;
     private final StudentRepository students;
     private final PasswordEncoder passwordEncoder;
@@ -110,10 +113,16 @@ public class AppUserService {
         return users.findAllByOrderByDisplayNameAsc().stream().map(AppUserView::from).toList();
     }
 
-    public AppUserView createStudentAccount(StudentAccountRequest request) {
+    public StudentCredentials createStudentAccount(StudentAccountRequest request) {
         String email = normalize(request.email());
-        validatePasswordLength(request.initialPassword());
         Student student = students.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new IllegalArgumentException("Create the student record before creating its account"));
+        return createStudentAccountFor(student.getId(), email, student.getFirstName() + " " + student.getLastName());
+    }
+
+    public StudentCredentials createStudentAccountFor(Long studentId, String emailAddress, String displayName) {
+        String email = normalize(emailAddress);
+        Student student = students.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Create the student record before creating its account"));
         AppUser user = users.findByEmailIgnoreCase(email).orElse(null);
         if (user != null && user.getRoles().contains(AppRole.ADMIN)) {
@@ -123,13 +132,14 @@ public class AppUserService {
             throw new IllegalArgumentException("An account already exists for this student");
         }
         if (user == null) user = new AppUser(UUID.randomUUID().toString(), email,
-                student.getFirstName() + " " + student.getLastName());
+                displayName);
         user.setEmail(email);
-        user.setDisplayName(student.getFirstName() + " " + student.getLastName());
-        user.setPasswordHash(passwordEncoder.encode(request.initialPassword()));
+        user.setDisplayName(displayName);
+        String temporaryPassword = generateTemporaryPassword();
+        user.setPasswordHash(passwordEncoder.encode(temporaryPassword));
         user.setRoles(Set.of(AppRole.STUDENT));
         user.setStudentId(student.getId());
-        return AppUserView.from(users.save(user));
+        return new StudentCredentials(AppUserView.from(users.save(user)), temporaryPassword);
     }
 
     public AppUserView createAdminAccount(AdminAccountRequest request) {
@@ -165,5 +175,13 @@ public class AppUserService {
         if (password.getBytes(StandardCharsets.UTF_8).length > 72) {
             throw new IllegalArgumentException("Passwords must be no longer than 72 UTF-8 bytes");
         }
+    }
+
+    private static String generateTemporaryPassword() {
+        char[] password = new char[20];
+        for (int i = 0; i < password.length; i++) {
+            password[i] = PASSWORD_CHARACTERS[PASSWORD_RANDOM.nextInt(PASSWORD_CHARACTERS.length)];
+        }
+        return new String(password);
     }
 }

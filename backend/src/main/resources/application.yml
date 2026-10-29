@@ -18,9 +18,23 @@ spring:
       hibernate.jdbc.time_zone: UTC
   flyway:
     enabled: true
+  mail:
+    host: ${SMS_MAIL_HOST:}
+    port: ${SMS_MAIL_PORT:587}
+    username: ${SMS_MAIL_USERNAME:}
+    password: ${SMS_MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${SMS_MAIL_AUTH:true}
+      mail.smtp.starttls.enable: ${SMS_MAIL_STARTTLS:true}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
 app.jwt-secret: ${JWT_SECRET:local-only-change-this-secret-to-a-random-value}
+sms.mail.from: ${SMS_MAIL_FROM:}
+sms.mail.login-url: ${SMS_PUBLIC_APP_URL:http://localhost:8080/login}
 management:
   endpoints.web.exposure.include: health,info
+  health.mail.enabled: false
   endpoint.health.show-details: never
 springdoc:
   swagger-ui.path: /swagger-ui.html

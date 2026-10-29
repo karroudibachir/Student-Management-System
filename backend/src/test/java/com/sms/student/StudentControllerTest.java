@@ -3,6 +3,8 @@ package com.sms.student;
 import com.sms.student.StudentStatus;
 import com.sms.auth.AppUserRepository;
 import com.sms.auth.AppUserService;
+import com.sms.auth.StudentCredentials;
+import com.sms.auth.StudentEmailService;
 import com.sms.auth.SecurityConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,7 @@ class StudentControllerTest {
     @MockBean StudentService service;
     @MockBean AppUserRepository users;
     @MockBean AppUserService accounts;
+    @MockBean StudentEmailService email;
 
     private StudentResponse response() {
         var now = OffsetDateTime.now();
@@ -42,6 +45,7 @@ class StudentControllerTest {
 
     @Test @WithMockUser(roles = "ADMIN") void createReturnsLocationAndDto() throws Exception {
         when(service.create(any())).thenReturn(response());
+        when(accounts.createStudentAccountFor(any(), any(), any())).thenReturn(new StudentCredentials(null, "temporary-password"));
         mvc.perform(post("/api/v1/students").contentType(MediaType.APPLICATION_JSON).content("""
                 {"firstName":"Ada","lastName":"Lovelace","email":"ada@example.edu",
                  "dateOfBirth":"2000-01-01","gender":"FEMALE","major":"Mathematics",
