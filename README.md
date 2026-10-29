@@ -102,12 +102,12 @@ The `.env.example` values are for local development only. Configure production s
 ## Build and test
 
 ```sh
-cd backend && mvn test
+cd backend && mvn verify
 cd frontend && npm test -- --watch=false --browsers=ChromeHeadless
 npm run build
 ```
 
-Backend tests run against H2 (`test` profile). Frontend tests use Karma and ChromeHeadless. Automated coverage currently focuses on the backend service; extend the Angular component and HTTP tests as the app grows.
+Backend tests cover service rules with Mockito, REST status and validation responses with MockMvc, and repository search on H2. `mvn verify` enforces at least 80% line coverage for `StudentServiceImpl`. Frontend HTTP service, theme persistence, and form validation tests run with Karma and ChromeHeadless.
 
 ## Deploy to Render
 

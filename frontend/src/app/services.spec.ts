@@ -1,7 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
+import { FormBuilder } from '@angular/forms';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { StudentService, ThemeService } from './services';
+import { ActivatedRoute, Router } from '@angular/router';
+import { StudentFormPage } from './pages';
+import { StudentService, ThemeService, ToastService } from './services';
 
 describe('StudentService', () => {
   let service: StudentService;
@@ -40,5 +43,30 @@ describe('ThemeService', () => {
     expect(theme.theme()).toBe('light');
     expect(localStorage.getItem('sms-theme')).toBe('light');
     expect(document.documentElement.dataset['theme']).toBe('light');
+  });
+});
+
+describe('StudentFormPage validation', () => {
+  it('requires the essential identity and enrollment fields', () => {
+    const page = new StudentFormPage(
+      new FormBuilder(),
+      {} as StudentService,
+      { snapshot: { paramMap: { get: () => null } } } as unknown as ActivatedRoute,
+      {} as Router,
+      new ToastService(),
+    );
+    page.ngOnInit();
+    const form = page.form;
+    expect(form.invalid).toBeTrue();
+    form.patchValue({
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: 'ada@example.edu',
+      dateOfBirth: '2000-01-01',
+      major: 'Mathematics',
+      enrollmentYear: 2024,
+      status: 'ACTIVE',
+    });
+    expect(form.valid).toBeTrue();
   });
 });
