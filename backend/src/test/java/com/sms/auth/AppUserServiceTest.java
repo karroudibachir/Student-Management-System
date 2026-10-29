@@ -1,14 +1,17 @@
 package com.sms.auth;
 
+import com.sms.student.Student;
+import com.sms.student.StudentRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -16,42 +19,62 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AppUserServiceTest {
     @Mock AppUserRepository users;
+    @Mock StudentRepository students;
+    @Mock PasswordEncoder passwords;
+    @Mock JwtEncoder jwtEncoder;
 
-    @Test void firstLoginGetsViewerUnlessBootstrapEmailMatches() {
-        AppUserService service = new AppUserService(users, "admin@example.edu");
-        when(users.findById("admin-sub")).thenReturn(Optional.empty());
-        when(users.save(any(AppUser.class))).thenAnswer(call -> call.getArgument(0));
-        AppUserView view = service.currentUser(jwt("admin-sub", "admin@example.edu"));
-        assertEquals(Set.of(AppRole.ADMIN), view.roles());
+    private AppUserService service(String email, String password) {
+        return new AppUserService(users, students, passwords, jwtEncoder, email, password);
     }
 
-    @Test void ordinaryFirstLoginGetsReadOnlyRole() {
-        AppUserService service = new AppUserService(users, "admin@example.edu");
-        when(users.findById("viewer-sub")).thenReturn(Optional.empty());
-        when(users.save(any(AppUser.class))).thenAnswer(call -> call.getArgument(0));
-        AppUserView view = service.currentUser(jwt("viewer-sub", "reader@example.edu"));
-        assertEquals(Set.of(AppRole.VIEWER), view.roles());
+    @Test void bootstrapCreatesAnAdministratorWithAnEncodedPassword() {
+        when(users.findByEmailIgnoreCase("admin@example.edu")).thenReturn(Optional.empty());
+        when(passwords.encode("a-strong-password")).thenReturn("bcrypt-hash");
+        when(users.save(any())).thenAnswer(call -> call.getArgument(0));
+        service("admin@example.edu", "a-strong-password").bootstrapAdmin();
+        var saved = org.mockito.ArgumentCaptor.forClass(AppUser.class);
+        verify(users).save(saved.capture());
+        assertEquals("bcrypt-hash", saved.getValue().getPasswordHash());
+        assertTrue(saved.getValue().getRoles().contains(AppRole.ADMIN));
     }
 
-    @Test void refusesToRemoveTheFinalAdministrator() {
-        AppUserService service = new AppUserService(users, "");
-        AppUser admin = new AppUser("admin-sub", "admin@example.edu", "Admin");
-        admin.getRoles().add(AppRole.ADMIN);
-        when(users.findById("admin-sub")).thenReturn(Optional.of(admin));
-        when(users.countUsersWithRole(AppRole.ADMIN)).thenReturn(1L);
-        assertThrows(LastAdministratorException.class,
-                () -> service.updateRoles("admin-sub", Set.of(AppRole.VIEWER)));
-        verify(users, never()).save(any());
+    @Test void loginRequiresThePasswordEncoderAndReturnsASignedJwt() {
+        AppUser user = new AppUser("user-sub", "student@example.edu", "Student User");
+        user.setPasswordHash("stored-hash");
+        when(users.findByEmailIgnoreCase("student@example.edu")).thenReturn(Optional.of(user));
+        when(passwords.matches("correct-password", "stored-hash")).thenReturn(true);
+        when(users.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(jwtEncoder.encode(any(JwtEncoderParameters.class))).thenReturn(Jwt.withTokenValue("signed-token")
+                .header("alg", "HS256").subject("user-sub").issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(3600)).build());
+
+        LoginResponse response = service("", "").login(new LoginRequest("STUDENT@example.edu", "correct-password"));
+        assertEquals("signed-token", response.accessToken());
+        assertEquals("user-sub", response.user().subject());
     }
 
-    private Jwt jwt(String subject, String email) {
-        return Jwt.withTokenValue("test-token")
-                .header("alg", "none")
-                .subject(subject)
-                .claim("email", email)
-                .claim("name", "Test User")
-                .issuedAt(Instant.now())
-                .expiresAt(Instant.now().plusSeconds(300))
-                .build();
+    @Test void studentAccountRequiresAnExistingRecordAndGetsOnlyTheStudentRole() {
+        Student student = mock(Student.class);
+        when(student.getFirstName()).thenReturn("Amira"); when(student.getLastName()).thenReturn("Ben Ali");
+        when(students.findByEmailIgnoreCase("amira@example.edu")).thenReturn(Optional.of(student));
+        when(users.findByEmailIgnoreCase("amira@example.edu")).thenReturn(Optional.empty());
+        when(passwords.encode("a-strong-password")).thenReturn("bcrypt-hash");
+        when(users.save(any())).thenAnswer(call -> call.getArgument(0));
+
+        AppUserView account = service("", "").createStudentAccount(
+                new StudentAccountRequest("amira@example.edu", "a-strong-password"));
+        assertEquals("amira@example.edu", account.email());
+        assertEquals(java.util.Set.of(AppRole.STUDENT), account.roles());
+        verify(passwords).encode("a-strong-password");
+    }
+
+    @Test void incorrectPasswordUsesTheSameGenericCredentialError() {
+        AppUser user = new AppUser("user-sub", "student@example.edu", "Student User");
+        user.setPasswordHash("stored-hash");
+        when(users.findByEmailIgnoreCase("student@example.edu")).thenReturn(Optional.of(user));
+        when(passwords.matches("wrong", "stored-hash")).thenReturn(false);
+        assertThrows(InvalidCredentialsException.class,
+                () -> service("", "").login(new LoginRequest("student@example.edu", "wrong")));
+        verifyNoInteractions(jwtEncoder);
     }
 }

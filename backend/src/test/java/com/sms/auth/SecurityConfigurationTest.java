@@ -20,11 +20,11 @@ class SecurityConfigurationTest {
         admin.getRoles().add(AppRole.ADMIN);
         when(users.findById("admin-sub")).thenReturn(Optional.of(admin));
         Jwt jwt = Jwt.withTokenValue("token").header("alg", "none").subject("admin-sub")
-                .claim("scope", "openid profile").issuedAt(Instant.now())
+                .issuedAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(120)).build();
         var authentication = new SecurityConfiguration().jwtAuthenticationConverter(users).convert(jwt);
         assertNotNull(authentication);
         assertTrue(authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")));
-        assertTrue(authentication.getAuthorities().contains(new SimpleGrantedAuthority("SCOPE_openid")));
     }
 }
+

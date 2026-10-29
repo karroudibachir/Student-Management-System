@@ -1,3 +1,3 @@
 package com.sms.auth;
 
-public enum AppRole { ADMIN, STAFF, VIEWER }
+public enum AppRole { ADMIN, STUDENT }

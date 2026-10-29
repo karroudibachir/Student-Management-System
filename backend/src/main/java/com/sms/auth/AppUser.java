@@ -11,6 +11,8 @@ public class AppUser {
     @Id @Column(length = 255) private String subject;
     @Column(length = 254) private String email;
     @Column(name = "display_name", length = 160) private String displayName;
+    @Column(name = "password_hash", length = 100) private String passwordHash;
+    @Column(name = "student_id", unique = true) private Long studentId;
     @Column(name = "last_seen_at", nullable = false) private OffsetDateTime lastSeenAt;
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "app_user_roles", joinColumns = @JoinColumn(name = "subject"))
@@ -27,6 +29,10 @@ public class AppUser {
     public void setEmail(String email) { this.email = email; }
     public String getDisplayName() { return displayName; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public Long getStudentId() { return studentId; }
+    public void setStudentId(Long studentId) { this.studentId = studentId; }
     public OffsetDateTime getLastSeenAt() { return lastSeenAt; }
     public void touch() { this.lastSeenAt = OffsetDateTime.now(); }
     public Set<AppRole> getRoles() { return roles; }

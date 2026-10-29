@@ -20,9 +20,6 @@
             "tsConfig": "tsconfig.app.json",
             "styles": [
               "src/styles.scss"
-            ],
-            "assets": [
-              "src/runtime-config.js"
             ]
           },
           "configurations": {

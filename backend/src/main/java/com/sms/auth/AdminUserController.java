@@ -10,8 +10,14 @@ public class AdminUserController {
     private final AppUserService users;
     public AdminUserController(AppUserService users) { this.users = users; }
     @GetMapping public List<AppUserView> list() { return users.listUsers(); }
-    @PutMapping("/{subject}/roles")
-    public AppUserView updateRoles(@PathVariable String subject, @Valid @RequestBody RoleUpdateRequest request) {
-        return users.updateRoles(subject, request.roles());
+    @PostMapping("/student-accounts")
+    public AppUserView createStudentAccount(@Valid @RequestBody StudentAccountRequest request) {
+        return users.createStudentAccount(request);
     }
+    @PostMapping("/admin-accounts")
+    public AppUserView createAdminAccount(@Valid @RequestBody AdminAccountRequest request) {
+        return users.createAdminAccount(request);
+    }
+    @DeleteMapping("/{subject}")
+    public void deleteStudentAccount(@PathVariable String subject) { users.deleteStudentAccount(subject); }
 }
