@@ -127,24 +127,3 @@ npm run build
 ```
 
 Backend tests cover service rules with Mockito, JWT-to-role authority mapping, REST authorization and validation with MockMvc, and student/account persistence on H2. `mvn verify` enforces at least 80% line coverage for `StudentServiceImpl`. Frontend HTTP service, theme persistence, and form validation tests run with Karma and ChromeHeadless.
-
-## Manual acceptance checklist
-
-- [ ] Add a student with required details and see it in the directory.
-- [ ] Open a profile, edit a field, save, and verify the updated value.
-- [ ] Delete a student after confirming the prompt.
-- [ ] Search by name, email, and student code; filter by major, status, and year.
-- [ ] Change page size and move between pages.
-- [ ] Toggle the theme, refresh, and check that the preference persists.
-- [ ] Check the sidebar, table cards, form, and profile on a narrow mobile viewport.
-- [ ] As an admin, create a student record and linked login; sign in as that student and update only their profile.
-
-## Repository layout
-
-```text
-backend/                    Spring Boot REST API, migrations, and tests
-frontend/                   Angular SPA, Nginx config, and container build
-.github/workflows/ci.yml     CI build and test jobs
-docker-compose.yml           Local multi-service stack
-.env.example                Local configuration template
-```
