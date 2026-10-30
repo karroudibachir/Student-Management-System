@@ -2,8 +2,6 @@
 
 A responsive student directory and dashboard built with Angular 20, Spring Boot 3, and MySQL 8. The API keeps student records behind validated DTOs; Flyway owns the schema and sample data.
 
-![Dashboard screenshot placeholder](docs/dashboard.png)
-
 ## Features
 
 - Dashboard with enrollment KPIs, GPA, study area distribution, and recent students.
